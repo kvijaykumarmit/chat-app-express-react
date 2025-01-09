@@ -7,9 +7,10 @@ async function loadAllChatMembers(req, res, _) {
         const skip = req.query.skip ? Number(req.query.skip) : 0;
         const limit = req.query.limit ? Number(req.query.limit) : 50;       
         const totalCount = await User.countDocuments();
+        const requestedUserId = req.user.id?new ObjectId(req.user.id):null;
         const result = await User.aggregate([
             {
-                $match: {_id: {$ne:(req.user.id?new ObjectId(req.user.id):null)}}
+                $match: {_id: {$ne:requestedUserId}}
             },
             {
                 $lookup: {
@@ -69,12 +70,19 @@ async function conversations(req, res, _){
         const skip = req.query.skip ? Number(req.query.skip) : 0;
         const limit = req.query.limit ? Number(req.query.limit) : 50;
         const userId = req.params.userId?new ObjectId(req.params.userId):null;
+        const requestedUserId = req.user.id?new ObjectId(req.user.id):null;
         const timeStamp = new Date();
         await Chat.updateMany({user_id:userId, viewed_at: null},{viewed_at: timeStamp}); 
-        const totalCount = await Chat.countDocuments();
+        const condition = {
+            $or:[
+                { sender_id:userId, receiver_id:requestedUserId },
+                { receiver_id:userId, sender_id:requestedUserId }
+            ]
+        };
+        const totalCount = await Chat.find(condition).countDocuments();     
         const result = await Chat.aggregate([       
             {
-                $match: {sender_id: req.user.id, receiver_id:userId}
+                $match: condition
             },     
             {
                 $project: {
@@ -105,11 +113,12 @@ async function conversations(req, res, _){
     }
 }
 
-async function newChat(req, res) {
+async function newChat(req, res, _) {
     try {
         const ObjectId = require('mongoose').Types.ObjectId;
         const { message } = req.body;
         const userId = req.params.userId ? new ObjectId(req.params.userId) : null;
+        const requestedUserId = req.user.id?new ObjectId(req.user.id):null;
 
         // Validate message
         if (!message || typeof message !== 'string') {
@@ -136,9 +145,10 @@ async function newChat(req, res) {
         })) || [];
 
         // Save the chat to the database
+        console.log(requestedUserId)
         const conversation = await new Chat({
             message: message.trim(),
-            sender_id: req.user.id,
+            sender_id: requestedUserId,
             receiver_id: userId,
             media_files: uploadedFiles, // Save file info if provided
         }).save();

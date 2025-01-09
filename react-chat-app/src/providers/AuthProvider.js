@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }) => {
         const response = await axiosInstance.get('/auth/session', { withCredentials: true });
         setUser(response.data.user); // Set user data if session exists
         localStorage.setItem('user', JSON.stringify(response.data.user)); 
+        localStorage.setItem('accessToken', response.data.accessToken);
       } catch (error) {
         console.log('No active session:', error);
       } finally {

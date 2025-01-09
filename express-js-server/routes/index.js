@@ -54,7 +54,9 @@ const validateJWT = (req, res, next) => {
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ message: 'Unauthorized: Invalid or expired token' });
-    }   
+    }
+    console.log("user ", user);
+
     req.user = user;
     next();
   });
