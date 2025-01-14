@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './providers/AuthProvider';
+import { WebSocketProvider } from './providers/WebSocketProvider';
 import ProtectedRoute from './ProtectedRoute';
 
 import './App.css';
@@ -9,10 +10,10 @@ import ChatScreen from './pages/chat/ChatScreen';
 
 const PageNotFound = ()=>(<h1>PageNotFound</h1>);
 
-const Chat = ()=>(<h1>Welcome to chat page</h1>);
-
 function App() {
-  return (<AuthProvider>
+  return (
+    <AuthProvider>    
+  <WebSocketProvider> 
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
@@ -20,7 +21,9 @@ function App() {
         <Route path="/conversations/:userId" element={<ProtectedRoute element={<ChatScreen />} />} />     
         <Route path="*" element={<PageNotFound />} />
       </Routes>
-    </Router>  
-  </AuthProvider>);
+    </Router>       
+  </WebSocketProvider>
+  </AuthProvider>
+  );
 }
 export default App;

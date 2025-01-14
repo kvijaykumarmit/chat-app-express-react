@@ -9,7 +9,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);  
 
   // Login function to authenticate the user and set HTTP-only cookie
   const login = async (credentials) => {
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axiosInstance.post('/auth', credentials, { withCredentials: true });
       setUser(response.data.user); // Set user data from server response
       localStorage.setItem('user', JSON.stringify(response.data.user)); 
-      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('accessToken', response.data.accessToken); 
     } catch (error) {
       console.error('Login failed:', error);
     }

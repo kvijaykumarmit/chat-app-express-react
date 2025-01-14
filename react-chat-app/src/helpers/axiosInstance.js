@@ -8,10 +8,8 @@ const axiosInstance = axios.create({
 });
 
 // Request interceptor to attach Authorization header
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('accessToken'); // Or use another storage mechanism
-    console.log(accessToken)
+axiosInstance.interceptors.request.use((config) => {
+    const accessToken = localStorage.getItem('accessToken');    
     if (accessToken) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
     }
@@ -23,17 +21,13 @@ axiosInstance.interceptors.request.use(
 );
 
 // Interceptor to handle expired access tokens
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+axiosInstance.interceptors.response.use((response) => response, async (error) => {
     const originalRequest = error.config;
-
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       // Refresh the token
       try {
-        const res = await axios.post(`${baseURL}/refresh-token`, {}, { withCredentials: true });
+        const res = await axios.post(`${baseURL}/auth/refresh-token`, {}, { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
         // Store the new token

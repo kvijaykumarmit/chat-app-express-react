@@ -1,11 +1,17 @@
 var express = require('express');
 var router = express.Router();
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const multer = require('multer');
+const path = require('path');
 const chatController = require('../controllers/chat.controller');
 
-function uploadMiddleware(uploadDir = 'uploads/', fileSizeLimit = 50 * 1024 * 1024){   
-    const multer = require('multer');
-    const path = require('path');
+// Middleware to configure file uploads
+function uploadMiddleware(uploadDir = 'uploads/', fileSizeLimit = 50 * 1024 * 1024) {
+    // Ensure the upload directory exists
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
     // Allowed MIME types
     const allowedMimeTypes = [
@@ -15,16 +21,18 @@ function uploadMiddleware(uploadDir = 'uploads/', fileSizeLimit = 50 * 1024 * 10
         'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain',
     ];
 
-    // Multer configuration   
+    // Multer storage configuration
     const storage = multer.diskStorage({
         destination: (req, file, cb) => {
             cb(null, uploadDir);
         },
         filename: (req, file, cb) => {
-            cb(null, `${Date.now()}-${file.originalname}`);
+            const uniqueName = `${Date.now()}-${file.originalname}`;
+            cb(null, uniqueName);
         },
     });
 
+    // File filter to validate MIME types
     const fileFilter = (req, file, cb) => {
         if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);
@@ -33,15 +41,16 @@ function uploadMiddleware(uploadDir = 'uploads/', fileSizeLimit = 50 * 1024 * 10
         }
     };
 
+    // Return the configured multer instance
     return multer({
         storage,
         fileFilter,
         limits: { fileSize: fileSizeLimit },
     });
-    
 }
-const upload = uploadMiddleware();
 
+// Instantiate the upload middleware
+const upload = uploadMiddleware();
 
 
 // Middleware to validate JWT
@@ -55,8 +64,6 @@ const validateJWT = (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: 'Unauthorized: Invalid or expired token' });
     }
-    console.log("user ", user);
-
     req.user = user;
     next();
   });
@@ -65,6 +72,6 @@ const validateJWT = (req, res, next) => {
 
 router.get('/users', validateJWT,chatController.loadAllChatMembers);
 router.get('/conversations/:userId',validateJWT, chatController.conversations);
-router.post('/send/:userId',validateJWT, upload.array('files', 10), chatController.newChat);
+router.post('/send/:userId/:mode?', validateJWT, upload.array('files', 10), chatController.newChat);
 
 module.exports = router;

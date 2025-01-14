@@ -1,3 +1,6 @@
+.chat-box.card{
+    height: 100vh;
+}
 .user-cards{
     border: 1px solid #ddd;
     border-radius: 10px;

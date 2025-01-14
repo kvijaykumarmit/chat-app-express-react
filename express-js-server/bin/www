@@ -7,7 +7,10 @@
 var app = require('../app');
 var debug = require('debug')('express-js-server:server');
 var http = require('http');
-
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const cookie = require('cookie');
+require('dotenv').config();
 /**
  * Get port from environment and store in Express.
  */
@@ -20,6 +23,67 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:3000',     
+    credentials: true, 
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Extract cookies from the socket request headers
+  const cookies = socket.request.headers.cookie;
+  if (!cookies) {
+    console.log('No cookies found, disconnecting socket.');
+    socket.disconnect(true); // Disconnect the client
+    return;
+  }
+
+  // Parse cookies to extract the refreshToken
+  const parsedCookies = cookie.parse(cookies); // Using cookie library to parse cookies
+  const refreshToken = parsedCookies.refreshToken;
+  if (!refreshToken) {
+    console.log('No refreshToken found in cookies, disconnecting socket.');
+    socket.disconnect(true); // Disconnect the client
+    return;
+  }
+
+  // Verify the refreshToken
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    console.log('refreshToken is valid:', decoded);
+
+    // Proceed with WebSocket communication
+    console.log('A user connected:', socket.id);
+
+    // After decoding the token, join the group based on _id
+    const userId = decoded._id;  // Assuming _id is present in the decoded token
+    socket.join(userId);  // Join the room named by the user's _id
+
+    console.log(`User ${userId} joined the group`);
+  } catch (error) {
+    console.log('Invalid refreshToken:', error.message);
+    socket.disconnect(true); // Disconnect the client
+  }
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Broadcast function
+function broadcast(event, data, to = null) {
+  if (to) {
+    io.to(to).emit(event, data);  // Send to specific socket ID
+  } else {
+    io.emit(event, data);  // Broadcast to all clients
+  }
+}
+
+app.set('broadcast', broadcast);
 
 /**
  * Listen on provided port, on all network interfaces.

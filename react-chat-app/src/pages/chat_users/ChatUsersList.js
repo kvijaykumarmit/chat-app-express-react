@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '../../helpers/axiosInstance';
 import config from '../../configs/app';
+import { useAuth } from '../../providers/AuthProvider';
+import { useWebSocket } from '../../providers/WebSocketProvider';
 import './chat-users.css'
 
 const ChatUsersList = () => {
@@ -10,6 +12,8 @@ const ChatUsersList = () => {
   const limit = 25;
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const { logout } = useAuth();
+  const {ws} = useWebSocket();
 
   const containerRef = useRef(null);
   const navigate = useNavigate();
@@ -55,18 +59,22 @@ const ChatUsersList = () => {
 
   useEffect(() => {
     fetchUsers();
+    ws?.on('new-message',(data)=>{
+      console.log("data on message", data);
+    });
   }, []); // Fetch initial users on component mount
 
   return (
-    <div className="container mt-4">
-      <div className="card">
-        <div className="card-header">
+    <div className="container">
+      <div className="chat-box card">
+        <div className="card-header d-flex justify-content-between align-items-center">
           <h5 className="mb-0">Chat Users</h5>
+          <button className='btn btn-logout' onClick={logout}>Logout</button>
         </div>
         <div
           className="card-body"
           id="chat-user-list"
-          style={{ maxHeight: '500px', overflowY: 'auto' }}
+          style={{ overflowY: 'auto' }}
           onScroll={handleScroll}
           ref={containerRef}
         >

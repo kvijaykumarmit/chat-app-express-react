@@ -1,17 +1,12 @@
-.chat-screen {
+.chat-screen.card{
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    max-width: 600px;
-    margin: 0 auto;
-    border: 1px solid #ccc;
-    border-radius: 10px;
+    height: 100vh;   
+    margin: 0 auto;  
     overflow: hidden;
 }
 
-.chat-header {
-    background-color: #007bff;
-    color: white;
+.chat-header {  
     padding: 10px;
     text-align: center;
     font-weight: bold;
@@ -40,6 +35,7 @@
 .chat-message.other {
     background-color: #f1f3f5;
     align-self: flex-start;
+    margin-left:20%;
 }
 
 .chat-media {
@@ -81,4 +77,23 @@
 .chat-input button:disabled {
     background-color: #a5a5a5;
     cursor: not-allowed;
+}
+
+.draft-message{
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.file-temp{
+    margin: 10px;
+    text-align: center;
+    width: 100px;
+    height: 100px;
+    position: relative;
+}
+.file-temp .close-btn{
+    color: #ff0000;
+    position: absolute;
+    right: 0px;
+    top: 0px;
 }
